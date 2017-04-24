@@ -32,7 +32,7 @@
   users.extraUsers.ajarara = {
     uid = 1000;
     isNormalUser = true;
-    extraGroups = ["wheel" "ajarara" ];
+    extraGroups = ["wheel" "ajarara" "nginx" ];
     openssh.authorizedKeys.keys = [ (builtins.readFile ./secrets/ajarara.pub) ];
   };
   
@@ -50,6 +50,31 @@
   services.nginx.enable = true;
 
   # one of the things that irks me a little bit is that NixOS doesn't really handle directory management.
+  # granted this is intrinsically state, and Nix is a functional language, but _some_ state is necessary.
+  systemd.services.nginxScaffolding = {
+    description = "Idempotent directory setup";
+    wantedBy = [ "nginx.service" ];
+    
+    script = let
+      # absolute
+      rootPath = "/var/lib/nginx";
+      # relative to rootPath
+      blogPath = "blog";
+    in ''
+     
+      mkdir -p ${rootPath}
+      
+      chown nginx:nginx ${rootPath}
+      # see https://en.wikipedia.org/wiki/Setuid#setuid_and_setgid_on_directories
+      # or better yet: http://permissions-calculator.org/info/#setgid
+      chmod 2775 ${rootPath}
+      
+      # does setgid work retroactively? then the above, while it does nothing, might become expensive.
+      mkdir -p ${rootPath}/${blogPath}
+    '';
+    serviceConfig.Type = "oneshot";
+      
+  };
   
   # services.nginx.virtualHosts = {
   #  "jarmac.org" =  {
