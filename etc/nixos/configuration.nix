@@ -5,6 +5,9 @@
 { config, pkgs, ... }:
 
 {
+  # the choice here is to inline the hardware config and remove this import
+  # or figure out how to keep this available remotely while
+  # not tracking it in version control.
   imports =
     [ # Include the results of the hardware scan.
       ./hardware-configuration.nix
@@ -19,11 +22,13 @@
   # Define on which hard drive you want to install Grub.
   boot.loader.grub.device = "/dev/vda"; # or "nodev" for efi only
 
-  networking.hostName = "nixos"; # Define your hostname.
-  # networking.wireless.enable = true;  # Enables wireless support via wpa_supplicant.
-
-  services.openssh.enable = true;
+  # Set your time zone.
+  time.timeZone = "EST";
   
+  # Define your hostname
+  networking.hostName = "jarmac";
+
+
   users.extraUsers.ajarara = {
     uid = 1000;
     isNormalUser = true;
@@ -38,42 +43,22 @@
   #   defaultLocale = "en_US.UTF-8";
   # };
 
-  # Set your time zone.
-  # time.timeZone = "Europe/Amsterdam";
+  # is it okay to listen on all interfaces?
+  services.openssh.enable = true;
+  networking.firewall.allowedTCPPorts = [ 80 ];
+  
+  services.nginx.enable = true;
 
-  # List packages installed in system profile. To search by name, run:
-  # $ nix-env -qaP | grep wget
-  # environment.systemPackages = with pkgs; [
-  #   wget
-  # ];
-
-  # List services that you want to enable:
-
-  # Enable the OpenSSH daemon.
-  # services.openssh.enable = true;
-
-  # Open ports in the firewall.
-  # networking.firewall.allowedTCPPorts = [ ... ];
-  # networking.firewall.allowedUDPPorts = [ ... ];
-  # Or disable the firewall altogether.
-  # networking.firewall.enable = false;
-
-  # Enable CUPS to print documents.
-  # services.printing.enable = true;
-
-  # Enable the X11 windowing system.
-  # services.xserver.enable = true;
-  # services.xserver.layout = "us";
-  # services.xserver.xkbOptions = "eurosign:e";
-
-  # Enable the KDE Desktop Environment.
-  # services.xserver.displayManager.sddm.enable = true;
-  # services.xserver.desktopManager.plasma5.enable = true;
-
-  # Define a user account. Don't forget to set a password with ‘passwd’.
-  # users.extraUsers.guest = {
-  #   isNormalUser = true;
-  #   uid = 1000;
+  # one of the things that irks me a little bit is that NixOS doesn't really handle directory management.
+  
+  # services.nginx.virtualHosts = {
+  #  "jarmac.org" =  {
+  #     locations."/" = {
+  #       port = 22;
+  #       root = "";
+  #     };
+  #     locations
+  #   };
   # };
 
   # The NixOS release to be compatible with for stateful data such as databases.
