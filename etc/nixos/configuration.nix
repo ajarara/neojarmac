@@ -51,7 +51,7 @@ in
 
   # is it okay to listen on all interfaces?
   services.openssh.enable = true;
-  networking.firewall.allowedTCPPorts = [ 80 443 ];
+  networking.firewall.allowedTCPPorts = [ 80 443 5013 ];
   
   # one of the things that irks me a little bit is that NixOS doesn't really handle directory management.
   # granted this is intrinsically state, and Nix is a functional language, but _some_ state is necessary.
@@ -94,6 +94,21 @@ in
     };
   };
 
+  # to update this config:
+  # first comment out mutable, rebuild, then uncomment and rebuild again.
+  # generally config is done through an IRC client or webmin.
+  services.znc = {
+    enable = true;
+    mutable = true;
+    confOptions = {
+      port = 5013;
+      userName = "alphor";
+      passBlock = builtins.readFile ./secrets/zncpass.block;
+    };
+  };
+  # On fresh ZNC config, for sanity, remember to seperate listen interfaces
+  # and remove web access from external IP.
+  
   # The NixOS release to be compatible with for stateful data such as databases.
   system.stateVersion = "17.03";
 

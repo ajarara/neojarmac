@@ -1,4 +1,4 @@
 build:
-	rsync -rav --copy-links --delete ./etc/nixos/ ajarara@neojarmac:/etc/nixos
+	rsync -rav --copy-links --delete ./etc/nixos/ ajarara@jarmac.org:/etc/nixos
 
 .PHONY: build
