@@ -1,2 +1,4 @@
+nixpkgs
 result
+hardware-configuration.nix
 **/secrets

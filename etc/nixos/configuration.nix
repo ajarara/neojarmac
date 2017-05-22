@@ -19,6 +19,7 @@ in
       ./hardware-configuration.nix
     ];
 
+    
   # Use the GRUB 2 boot loader.
   boot.loader.grub.enable = true;
   boot.loader.grub.version = 2;
@@ -49,6 +50,17 @@ in
   #   defaultLocale = "en_US.UTF-8";
   # };
 
+  # build from local nixpkgs checkout
+  nix.nixPath = [ "/etc/nixos" "nixos-config=/etc/nixos/configuration.nix" ];
+
+  # default nix path. More here for doc reasons.
+  # nix.nixPath = [
+  #   "/nix/var/nix/profiles/pre-user/root/channels"  # adding /nixos makes the -I flag work... what's going on here.
+  #   "nixos-config=/etc/nixos/configuration.nix"
+  #   "nixpkgs=/nix/var/nix/profiles/per-user/root/channels/nixos/nixpkgs"
+  # ]
+  
+  
   # is it okay to listen on all interfaces?
   services.openssh.enable = true;
   networking.firewall.allowedTCPPorts = [ 80 443 5013 ];
@@ -59,8 +71,7 @@ in
     description = "Idempotent directory setup";
     requiredBy = [ "nginx.service" ];
     
-    script = let
-    in ''
+    script = ''
      
       mkdir -p ${nginxRootPath}
       
@@ -94,6 +105,31 @@ in
     };
   };
 
+  services.mysql = {
+    enable = true;
+    dataDir = "/var/db/mysql";
+    package = pkgs.mysql55;
+    initialScript = pkgs.writeText "piwik-sql-init" ''
+      CREATE USER 'piwik'@'localhost' IDENTIFIED BY '${builtins.readFile ./secrets/piwikCreds}';
+      GRANT ALL PRIVILEGES ON piwikdb . * TO 'piwik'@'localhost';
+    '';
+  };
+  
+  services.nixosManual.enable = false;
+  services.piwik = {
+    enable = true;
+    webServerUser = "nginx";
+    nginx = {
+      # hmm maybe I don't want it as a subdomain, but instead a port?
+      # is there a way to use the current definition of what a
+      # virtualHost is? in nginx' case it's in a separate file
+      # and could be imported.
+      virtualHost = "piwik.jarmac.org";
+      forceSSL = true;
+      enableACME = true;
+    };
+  };
+
   # to update this config:
   # first comment out mutable, rebuild, then uncomment and rebuild again.
   # generally config is done through an IRC client or webmin.
@@ -109,7 +145,7 @@ in
   # On fresh ZNC config, for sanity, remember to seperate listen interfaces
   # and remove web access from external IP.
   
-  # The NixOS release to be compatible with for stateful data such as databases.
-  system.stateVersion = "17.03";
+   # The NixOS release to be compatible with for stateful data such as databases.
+   system.stateVersion = "17.03";
 
 }
